@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from pathlib import Path
-load_dotenv(dotenv_path=Path(".env"), verbose=True)
+import os
+load_dotenv(dotenv_path=Path(os.path.join(os.path.dirname(__file__), ".env")), verbose=True)
 
 
 from agent.react_agent import create_agent
