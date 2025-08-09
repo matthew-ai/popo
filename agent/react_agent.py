@@ -1,16 +1,18 @@
 from langgraph.prebuilt import create_react_agent
 from llm_model.qwen import llm_model
-from agent.tools.example import get_weather
+from agent.state import State
+from prompt.load_template import load_prompt_template
+from utils.project_structure import get_project_structure_xml
 
 def create_agent():
     chat_model = llm_model
-    tools = [
-        get_weather
-    ]
+    prompt = load_prompt_template("code_sys", context=get_project_structure_xml())
+    tools = []
     agent = create_react_agent(
         model=chat_model,
         tools=tools,
-        prompt="never answer questions about the weather",
+        prompt=prompt,
+        state_schema=State,
         name="popo",
     )
     return agent

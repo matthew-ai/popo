@@ -21,5 +21,5 @@ def query(question: str):
 
 
 if __name__ == "__main__":
-    question = "what is the weather in sf?"
+    question = "最近提交代码的是谁，提交信息是什么？"
     query(question)
