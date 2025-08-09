@@ -3,7 +3,22 @@ from pathlib import Path
 load_dotenv(dotenv_path=Path(".env"), verbose=True)
 
 
+from agent.react_agent import create_agent
 
-from llm_model.qwen import llm_model
+def query(question: str):
+    pass
 
-print(llm_model.invoke("你是谁"))
+
+
+if __name__ == "__main__":
+    # question = "What is the capital of France?"
+    # query(question)
+
+    react_agent = create_agent()
+    print(react_agent.invoke(
+        {
+            "messages": [
+                {"role": "user", "content": "what is the weather in sf"}
+            ]
+        }
+    ))
