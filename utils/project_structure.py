@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import List, Optional
 from dataclasses import dataclass
 
+from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.dom import minidom
+from typing import Any
+
 
 @dataclass
 class RepoInfo:
@@ -152,6 +156,76 @@ def get_project_structure() -> Optional[RepoInfo]:
         print(f"发生错误: {str(e)}")
         return None
 
+
+def class_to_xml(obj: Any, root_tag: str = None) -> str:
+    """
+    将Python类实例转换为XML格式字符串
+
+    参数:
+        obj: 任意类实例
+        root_tag: 根节点标签名（默认使用类名）
+    返回:
+        格式化后的XML字符串
+    """
+    # 根节点标签默认使用类名（首字母小写处理）
+    if root_tag is None:
+        root_tag = obj.__class__.__name__.lower()
+    root = Element(root_tag)
+
+    # 递归处理属性的函数
+    def build_xml(element: Element, name: str, value: Any):
+        # 处理基本类型（字符串、数字、布尔值、None）
+        if isinstance(value, (str, int, float, bool, type(None))):
+            elem = SubElement(element, name)
+            elem.text = str(value).lower() if isinstance(value, bool) else str(value)
+            return
+
+        # 处理列表/元组等可迭代对象
+        if isinstance(value, (list, tuple)):
+            list_elem = SubElement(element, name)
+            for item in value:
+                # 列表项统一用<item>标签，递归处理内容
+                build_xml(list_elem, "item", item)
+            return
+
+        # 处理嵌套的类实例（非内置类型）
+        if hasattr(value, '__dict__'):  # 检查是否为自定义类实例
+            obj_elem = SubElement(element, name)
+            # 遍历实例的属性字典（排除私有属性）
+            for attr_name, attr_value in value.__dict__.items():
+                if not attr_name.startswith('__'):  # 跳过私有属性
+                    # 属性名作为标签名（替换特殊字符）
+                    safe_name = attr_name.replace("_", "-").lower()
+                    build_xml(obj_elem, safe_name, attr_value)
+            return
+
+        # 其他类型（如字典）
+        if isinstance(value, dict):
+            dict_elem = SubElement(element, name)
+            for key, val in value.items():
+                safe_key = key.replace("_", "-").lower()
+                build_xml(dict_elem, safe_key, val)
+            return
+
+    # 遍历当前类实例的所有属性（排除私有属性）
+    for attr_name, attr_value in obj.__dict__.items():
+        if not attr_name.startswith('__'):  # 跳过__module__、__doc__等内置属性
+            safe_attr_name = attr_name.replace("_", "-").lower()
+            build_xml(root, safe_attr_name, attr_value)
+
+    # 格式化XML（增加缩进和换行）
+    rough_xml = tostring(root, 'utf-8')
+    parsed_xml = minidom.parseString(rough_xml)
+    return parsed_xml.toprettyxml(indent="  ")
+
+
+def get_project_structure_xml() -> Optional[str]:
+    """获取项目仓库信息并返回 XML 字符串"""
+    repo_info = get_project_structure()
+    if repo_info:
+        return class_to_xml(repo_info)
+    return None
+
 if __name__ == "__main__":
     repo_info = get_project_structure()
     if repo_info:
@@ -168,3 +242,5 @@ if __name__ == "__main__":
         print(f"是否有Makefile: {repo_info.hasMakefile}")
         print(f"总文件数: {repo_info.totalFiles}")
         print(f"总目录数: {repo_info.totalDirectories}")
+
+    print(get_project_structure_xml())
