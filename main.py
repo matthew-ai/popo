@@ -7,14 +7,15 @@ from agent.react_agent import create_agent
 
 def query(question: str):
     react_agent = create_agent()
-    result = react_agent.invoke(
+    result = react_agent.stream(
         {
             "messages": [
                 {"role": "user", "content": question}
             ]
         }
     )
-    print(result)
+    for chunk in result:
+        print(chunk)
 
 
 
