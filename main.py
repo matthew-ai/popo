@@ -22,5 +22,6 @@ def query(question: str):
 
 
 if __name__ == "__main__":
-    question = "最近提交代码的是谁，提交信息是什么？"
+    # question = "当前项目是如何实现读文件的"
+    question = "帮我查找项目中有关提示词模板的内容"
     query(question)
